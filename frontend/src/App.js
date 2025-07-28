@@ -145,8 +145,11 @@ const AudioRecorder = ({ onAudioRecorded }) => {
   );
 };
 
-// File Upload Component
+// File Upload Component with drag and drop animations
 const FileUpload = ({ onFileSelected }) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef(null);
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -154,20 +157,67 @@ const FileUpload = ({ onFileSelected }) => {
     }
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      onFileSelected(files[0], files[0].name);
+    }
+  };
+
   return (
-    <div className="file-upload">
-      <input
-        type="file"
-        accept="audio/*"
-        onChange={handleFileChange}
-        id="audio-upload"
-        className="file-input"
-      />
-      <label htmlFor="audio-upload" className="file-label">
-        <div className="upload-icon">📁</div>
-        Choose Audio File
-      </label>
-    </div>
+    <motion.div 
+      className="file-upload"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className={`drop-zone ${isDragOver ? 'drag-over' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        whileHover={{ scale: 1.02 }}
+        animate={{
+          borderColor: isDragOver ? '#42a5f5' : '#rgba(255,255,255,0.1)',
+          backgroundColor: isDragOver ? 'rgba(66, 165, 245, 0.1)' : 'transparent'
+        }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*"
+          onChange={handleFileChange}
+          id="audio-upload"
+          className="file-input"
+        />
+        
+        <label htmlFor="audio-upload" className="file-label">
+          <motion.div 
+            className="upload-icon"
+            animate={{ y: isDragOver ? [-5, 5, -5] : 0 }}
+            transition={{ duration: 0.5, repeat: isDragOver ? Infinity : 0 }}
+          >
+            📁
+          </motion.div>
+          <div className="upload-text">
+            <p className="primary-text">Choose Audio File</p>
+            <p className="secondary-text">or drag and drop here</p>
+            <p className="format-text">Supports WAV, MP3, M4A, OGG</p>
+          </div>
+        </label>
+      </motion.div>
+    </motion.div>
   );
 };
 
