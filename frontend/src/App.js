@@ -634,7 +634,7 @@ const PWAInstallPrompt = () => {
         <div className="prompt-content">
           <div className="prompt-icon">📱</div>
           <div className="prompt-text">
-            <h4>Install VehicleAI Whisperer</h4>
+            <h4>Install Eniguity</h4>
             <p>Get the full app experience with offline diagnostics</p>
           </div>
           <div className="prompt-actions">
