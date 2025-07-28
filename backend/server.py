@@ -188,7 +188,7 @@ async def analyze_audio(file: UploadFile = File(...)):
     try:
         # Validate file type
         if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.ogg')):
-            raise HTTPException(status_code=400, detail="Unsupported audio format")
+            raise HTTPException(status_code=400, detail="Unsupported audio format. Please upload WAV, MP3, M4A, or OGG files.")
         
         # Read and process audio file
         contents = await file.read()
@@ -221,7 +221,8 @@ async def analyze_audio(file: UploadFile = File(...)):
             )
             
             # Store in database
-            await db.diagnostic_results.insert_one(result.dict())
+            result_dict = result.dict()
+            await db.diagnostic_results.insert_one(result_dict)
             
             # Clean up temp file
             os.remove(temp_path)
@@ -232,8 +233,10 @@ async def analyze_audio(file: UploadFile = File(...)):
             # Clean up temp file on error
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            raise HTTPException(status_code=500, detail=f"Audio processing failed: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Audio processing failed. Please ensure you uploaded a valid audio file: {str(e)}")
             
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
