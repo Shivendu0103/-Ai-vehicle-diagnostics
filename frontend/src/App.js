@@ -9,16 +9,27 @@ import { useDeviceMotion } from './hooks/useDeviceMotion';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-// Audio Recording Component
+// Audio Recording Component with enhanced animations
 const AudioRecorder = ({ onAudioRecorded }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
+  const [audioData, setAudioData] = useState([]);
   const mediaRecorder = useRef(null);
   const audioChunks = useRef([]);
+  const audioContext = useRef(null);
+  const analyser = useRef(null);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Set up audio analysis
+      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+      analyser.current = audioContext.current.createAnalyser();
+      const source = audioContext.current.createMediaStreamSource(stream);
+      source.connect(analyser.current);
+      analyser.current.fftSize = 256;
+      
       mediaRecorder.current = new MediaRecorder(stream);
       audioChunks.current = [];
 
@@ -31,10 +42,27 @@ const AudioRecorder = ({ onAudioRecorded }) => {
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioURL(audioUrl);
         onAudioRecorded(audioBlob, 'recorded_audio.wav');
+        
+        // Clean up
+        if (audioContext.current) {
+          audioContext.current.close();
+        }
+      };
+
+      // Start real-time audio visualization
+      const updateAudioData = () => {
+        if (analyser.current && isRecording) {
+          const bufferLength = analyser.current.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+          analyser.current.getByteFrequencyData(dataArray);
+          setAudioData(Array.from(dataArray).map(val => val / 255));
+          requestAnimationFrame(updateAudioData);
+        }
       };
 
       mediaRecorder.current.start();
       setIsRecording(true);
+      updateAudioData();
     } catch (err) {
       console.error('Error accessing microphone:', err);
       alert('Please allow microphone access to record audio');
@@ -45,38 +73,75 @@ const AudioRecorder = ({ onAudioRecorded }) => {
     if (mediaRecorder.current && isRecording) {
       mediaRecorder.current.stop();
       setIsRecording(false);
+      setAudioData([]);
       mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
     }
   };
 
   return (
-    <div className="audio-recorder">
+    <motion.div 
+      className="audio-recorder"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <AnimatedParticles isActive={isRecording} audioData={audioData} />
+      
       <div className="recorder-controls">
-        {!isRecording ? (
-          <button 
-            onClick={startRecording}
-            className="record-btn"
-          >
-            <div className="mic-icon">🎤</div>
-            Start Recording
-          </button>
-        ) : (
-          <button 
-            onClick={stopRecording}
-            className="stop-btn recording"
-          >
-            <div className="stop-icon">⏹️</div>
-            Stop Recording
-          </button>
-        )}
+        <AnimatePresence>
+          {!isRecording ? (
+            <motion.button 
+              onClick={startRecording}
+              className="record-btn"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                className="mic-icon"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                🎤
+              </motion.div>
+              Start Recording
+            </motion.button>
+          ) : (
+            <motion.button 
+              onClick={stopRecording}
+              className="stop-btn recording"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                className="stop-icon"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                ⏹️
+              </motion.div>
+              Stop Recording
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
       
       {audioURL && (
-        <div className="audio-preview">
+        <motion.div 
+          className="audio-preview"
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          transition={{ duration: 0.5 }}
+        >
           <audio controls src={audioURL} className="audio-player" />
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
