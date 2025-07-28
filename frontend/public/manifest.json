@@ -1,0 +1,22 @@
+{
+  "name": "VehicleAI Whisperer",
+  "short_name": "VehicleAI",
+  "description": "AI-Powered Vehicle Diagnostics Platform",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231976d2'/><text x='50' y='50' font-size='40' text-anchor='middle' dy='0.35em' fill='white'>🚗</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231976d2'/><text x='50' y='50' font-size='40' text-anchor='middle' dy='0.35em' fill='white'>🚗</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#0f1419",
+  "orientation": "portrait-primary"
+}
