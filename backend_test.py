@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-VehicleAI Whisperer Backend API Testing Suite
-Tests all backend endpoints for the vehicle diagnostics platform
+Eniguity Backend API Testing Suite - MP3 Audio Upload Focus
+Tests all backend endpoints with special focus on MP3 audio processing
 """
 
 import requests
@@ -12,6 +12,7 @@ import wave
 import numpy as np
 from datetime import datetime
 import time
+import struct
 
 # Get backend URL from frontend environment
 BACKEND_URL = "https://5621932a-bb8b-4c46-a8c6-38383abc101f.preview.emergentagent.com/api"
