@@ -767,7 +767,7 @@ function App() {
               🚗
             </motion.div>
             <div className="brand-info">
-              <h1>VehicleAI Whisperer</h1>
+              <h1>Eniguity</h1>
               <p>AI-Powered Vehicle Diagnostics • Now with Voice Control</p>
             </div>
           </motion.div>
