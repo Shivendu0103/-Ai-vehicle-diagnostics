@@ -187,23 +187,39 @@ async def analyze_audio(file: UploadFile = File(...)):
     """Analyze uploaded audio file for vehicle diagnostics"""
     try:
         # Validate file type
-        if not file.filename.lower().endswith(('.wav', '.mp3', '.m4a', '.ogg')):
-            raise HTTPException(status_code=400, detail="Unsupported audio format. Please upload WAV, MP3, M4A, or OGG files.")
+        allowed_extensions = ('.wav', '.mp3', '.m4a', '.ogg', '.flac')
+        if not file.filename.lower().endswith(allowed_extensions):
+            raise HTTPException(status_code=400, detail="Unsupported audio format. Please upload WAV, MP3, M4A, OGG, or FLAC files.")
         
         # Read and process audio file
         contents = await file.read()
         
-        # Save temporarily for processing
-        temp_path = f"/tmp/{uuid.uuid4()}.wav"
+        # Get file extension to preserve format
+        file_extension = os.path.splitext(file.filename.lower())[1]
+        if not file_extension:
+            file_extension = '.wav'  # Default fallback
+            
+        # Save temporarily with correct extension for librosa
+        temp_path = f"/tmp/{uuid.uuid4()}{file_extension}"
         async with aiofiles.open(temp_path, 'wb') as f:
             await f.write(contents)
         
         try:
-            # Load audio with librosa
+            # Load audio with librosa - it will handle different formats automatically
             audio_data, sample_rate = librosa.load(temp_path, sr=None)
+            
+            # Verify audio was loaded successfully
+            if len(audio_data) == 0:
+                raise ValueError("Audio file appears to be empty or corrupted")
+            
+            if sample_rate is None or sample_rate <= 0:
+                raise ValueError("Invalid sample rate detected")
             
             # Extract features
             features = extract_audio_features(audio_data, sample_rate)
+            
+            if features is None:
+                raise ValueError("Failed to extract audio features")
             
             # Generate mock diagnosis
             diagnosis_data = generate_mock_diagnosis(features)
@@ -233,11 +249,13 @@ async def analyze_audio(file: UploadFile = File(...)):
             # Clean up temp file on error
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-            raise HTTPException(status_code=400, detail=f"Audio processing failed. Please ensure you uploaded a valid audio file: {str(e)}")
+            logging.error(f"Audio processing error for file {file.filename}: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Audio processing failed. Please ensure you uploaded a valid audio file. Error: {str(e)}")
             
     except HTTPException:
         raise  # Re-raise HTTP exceptions
     except Exception as e:
+        logging.error(f"Unexpected error in analyze_audio: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 @api_router.get("/health-overview")
