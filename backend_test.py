@@ -14,7 +14,7 @@ from datetime import datetime
 import time
 
 # Get backend URL from frontend environment
-BACKEND_URL = "https://f26717ac-ae00-46e9-af24-2b5b1e4ca6c8.preview.emergentagent.com/api"
+BACKEND_URL = "https://5621932a-bb8b-4c46-a8c6-38383abc101f.preview.emergentagent.com/api"
 
 class VehicleAITester:
     def __init__(self):
