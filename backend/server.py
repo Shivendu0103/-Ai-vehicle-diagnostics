@@ -180,7 +180,7 @@ def generate_health_scores():
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "VehicleAI Diagnostics API v1.0"}
+    return {"message": "Eniguity Diagnostics API v1.0"}
 
 @api_router.post("/analyze-audio")
 async def analyze_audio(file: UploadFile = File(...)):
