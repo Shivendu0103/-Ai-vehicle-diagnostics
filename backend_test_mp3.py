@@ -172,6 +172,45 @@ class EniguityTester:
             self.log_test("MP3 Upload", False, f"Request error: {str(e)}")
             return False
 
+    def create_audio_file_by_format(self, format_ext):
+        """Create proper audio files for different formats using ffmpeg"""
+        try:
+            import subprocess
+            
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=format_ext)
+            temp_file.close()
+            
+            if format_ext == '.wav':
+                # Use our existing WAV creation method
+                return self.create_realistic_engine_audio('.wav')
+            else:
+                # Use ffmpeg for other formats
+                codec_map = {
+                    '.mp3': 'mp3',
+                    '.m4a': 'aac',
+                    '.ogg': 'libvorbis',
+                    '.flac': 'flac'
+                }
+                
+                codec = codec_map.get(format_ext, 'mp3')
+                
+                cmd = [
+                    'ffmpeg', '-f', 'lavfi', '-i', 'sine=frequency=150:duration=3',
+                    '-acodec', codec, '-ar', '44100', temp_file.name, '-y'
+                ]
+                
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                
+                if result.returncode == 0:
+                    return temp_file.name
+                else:
+                    self.log_test(f"{format_ext.upper()} File Creation", False, f"ffmpeg failed: {result.stderr}")
+                    return None
+                    
+        except Exception as e:
+            self.log_test(f"{format_ext.upper()} File Creation", False, f"Failed to create {format_ext} file: {str(e)}")
+            return None
+
     def test_multiple_audio_formats(self):
         """Test various audio formats as mentioned in the review request"""
         print("\n🎼 TESTING MULTIPLE AUDIO FORMATS")
@@ -188,16 +227,7 @@ class EniguityTester:
         results = []
         for ext, mime_type, format_name in formats_to_test:
             try:
-                if ext == '.wav':
-                    audio_file_path = self.create_realistic_engine_audio('.wav')
-                else:
-                    # For non-WAV formats, create basic test files
-                    audio_file_path = self.create_mp3_test_file()
-                    if audio_file_path:
-                        # Rename to correct extension
-                        new_path = audio_file_path.replace('.mp3', ext)
-                        os.rename(audio_file_path, new_path)
-                        audio_file_path = new_path
+                audio_file_path = self.create_audio_file_by_format(ext)
                 
                 if not audio_file_path:
                     results.append((format_name, False, "File creation failed"))
