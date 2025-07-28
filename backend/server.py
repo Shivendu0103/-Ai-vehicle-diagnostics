@@ -271,6 +271,10 @@ async def get_health_overview():
 async def get_diagnostic_history():
     """Get diagnostic history"""
     diagnostics = await db.diagnostic_results.find().sort("created_at", -1).limit(20).to_list(20)
+    # Convert MongoDB documents to JSON-serializable format
+    for diagnostic in diagnostics:
+        if '_id' in diagnostic:
+            del diagnostic['_id']  # Remove MongoDB ObjectId
     return diagnostics
 
 @api_router.post("/vehicle", response_model=VehicleInfo)
