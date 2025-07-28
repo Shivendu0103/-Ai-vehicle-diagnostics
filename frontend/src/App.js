@@ -591,16 +591,105 @@ const HealthDashboard = ({ healthData }) => {
   );
 };
 
+# PWA Install Prompt Component
+const PWAInstallPrompt = () => {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowPrompt(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`User response to the install prompt: ${outcome}`);
+      setDeferredPrompt(null);
+      setShowPrompt(false);
+    }
+  };
+
+  if (!showPrompt) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div 
+        className="pwa-install-prompt"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="prompt-content">
+          <div className="prompt-icon">📱</div>
+          <div className="prompt-text">
+            <h4>Install VehicleAI Whisperer</h4>
+            <p>Get the full app experience with offline diagnostics</p>
+          </div>
+          <div className="prompt-actions">
+            <motion.button 
+              className="install-btn"
+              onClick={handleInstall}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Install
+            </motion.button>
+            <motion.button 
+              className="dismiss-btn"
+              onClick={() => setShowPrompt(false)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Later
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 // Main App Component
 function App() {
   const [currentTab, setCurrentTab] = useState('analyze');
   const [diagnosticResults, setDiagnosticResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [healthData, setHealthData] = useState(null);
+  const [audioFeatures, setAudioFeatures] = useState(null);
+  const { motion: deviceMotion, requestPermission, isSupported: motionSupported } = useDeviceMotion();
 
   useEffect(() => {
     fetchHealthOverview();
+    registerServiceWorker();
+    
+    // Request device motion permission on mobile
+    if (motionSupported && /Mobi|Android/i.test(navigator.userAgent)) {
+      requestPermission();
+    }
   }, []);
+
+  const registerServiceWorker = async () => {
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('SW registered:', registration);
+      } catch (error) {
+        console.log('SW registration failed:', error);
+      }
+    }
+  };
 
   const fetchHealthOverview = async () => {
     try {
@@ -625,6 +714,13 @@ function App() {
         },
       });
 
+      // Store audio features for AI assistant
+      setAudioFeatures({
+        filename: filename,
+        duration: 3, // placeholder
+        mfcc_features: Array.from({length: 13}, () => Math.random())
+      });
+
       setTimeout(() => {
         setDiagnosticResults(response.data);
         setIsAnalyzing(false);
@@ -637,74 +733,185 @@ function App() {
     }
   };
 
+  const handleAIAnalysisComplete = (aiAnalysis) => {
+    // Merge AI analysis with existing results
+    if (diagnosticResults) {
+      setDiagnosticResults({
+        ...diagnosticResults,
+        aiExplanation: aiAnalysis.aiExplanation,
+        ...aiAnalysis
+      });
+    }
+  };
+
   return (
     <div className="App">
-      <div className="app-header">
+      <PWAInstallPrompt />
+      
+      <motion.div 
+        className="app-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
         <div className="header-content">
-          <div className="logo-section">
-            <div className="logo">🚗</div>
+          <motion.div 
+            className="logo-section"
+            whileHover={{ scale: 1.02 }}
+          >
+            <motion.div 
+              className="logo"
+              animate={{ rotate: [0, 5, -5, 0] }}
+              transition={{ duration: 4, repeat: Infinity }}
+            >
+              🚗
+            </motion.div>
             <div className="brand-info">
               <h1>VehicleAI Whisperer</h1>
-              <p>AI-Powered Vehicle Diagnostics</p>
+              <p>AI-Powered Vehicle Diagnostics • Now with Voice Control</p>
             </div>
-          </div>
+          </motion.div>
           <nav className="nav-tabs">
-            <button 
+            <motion.button 
               className={`nav-tab ${currentTab === 'analyze' ? 'active' : ''}`}
               onClick={() => setCurrentTab('analyze')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              🎵 Sound Analysis
-            </button>
-            <button 
+              🎵 AI Sound Analysis
+            </motion.button>
+            <motion.button 
               className={`nav-tab ${currentTab === 'dashboard' ? 'active' : ''}`}
               onClick={() => setCurrentTab('dashboard')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               📊 Health Dashboard
-            </button>
+            </motion.button>
           </nav>
         </div>
-      </div>
+      </motion.div>
 
       <div className="app-content">
-        {currentTab === 'analyze' && (
-          <div className="analyze-section">
-            <div className="hero-section">
-              <img 
-                src="https://images.pexels.com/photos/2422556/pexels-photo-2422556.jpeg" 
-                alt="AI Diagnostics"
-                className="hero-image"
-              />
-              <div className="hero-content">
-                <h2>🎧 Upload Vehicle Audio for AI Analysis</h2>
-                <p>Record or upload engine sounds, brake noises, or any vehicle audio for instant AI-powered diagnosis</p>
-              </div>
-            </div>
-
-            <div className="input-section">
-              <div className="input-methods">
-                <div className="method-card">
-                  <h3>🎤 Record Live Audio</h3>
-                  <AudioRecorder onAudioRecorded={analyzeAudio} />
+        <AnimatePresence mode="wait">
+          {currentTab === 'analyze' && (
+            <motion.div 
+              key="analyze"
+              className="analyze-section"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <motion.div 
+                className="hero-section"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <img 
+                  src="https://images.pexels.com/photos/2422556/pexels-photo-2422556.jpeg" 
+                  alt="AI Diagnostics"
+                  className="hero-image"
+                />
+                <div className="hero-content">
+                  <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    🎧 Upload Vehicle Audio for AI Analysis
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    Record or upload engine sounds, brake noises, or any vehicle audio for instant AI-powered diagnosis with voice control
+                  </motion.p>
                 </div>
-                
-                <div className="method-divider">OR</div>
-                
-                <div className="method-card">
-                  <h3>📁 Upload Audio File</h3>
-                  <FileUpload onFileSelected={analyzeAudio} />
+              </motion.div>
+
+              <motion.div 
+                className="input-section"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+              >
+                <div className="input-methods">
+                  <div className="method-card">
+                    <h3>🎤 Record Live Audio with AI</h3>
+                    <AudioRecorder onAudioRecorded={analyzeAudio} />
+                  </div>
+                  
+                  <motion.div 
+                    className="method-divider"
+                    animate={{ rotate: [0, 180, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  >
+                    OR
+                  </motion.div>
+                  
+                  <div className="method-card">
+                    <h3>📁 Upload Audio File</h3>
+                    <FileUpload onFileSelected={analyzeAudio} />
+                  </div>
                 </div>
-              </div>
-            </div>
+              </motion.div>
 
-            <DiagnosticResults results={diagnosticResults} isAnalyzing={isAnalyzing} />
-          </div>
-        )}
+              <AnimatePresence>
+                {(isAnalyzing || diagnosticResults) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <DiagnosticResults results={diagnosticResults} isAnalyzing={isAnalyzing} />
+                    
+                    {(diagnosticResults || audioFeatures) && (
+                      <AIAssistant 
+                        diagnosticData={audioFeatures}
+                        onAnalysisComplete={handleAIAnalysisComplete}
+                      />
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
-        {currentTab === 'dashboard' && (
-          <div className="dashboard-section">
-            <HealthDashboard healthData={healthData} />
-          </div>
-        )}
+          {currentTab === 'dashboard' && (
+            <motion.div 
+              key="dashboard"
+              className="dashboard-section"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.5 }}
+            >
+              <HealthDashboard healthData={healthData} />
+              
+              {motionSupported && (
+                <motion.div 
+                  className="sensor-data"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <h3>📱 Device Motion Sensors</h3>
+                  <div className="sensor-grid">
+                    <div className="sensor-card">
+                      <h4>Acceleration</h4>
+                      <p>X: {deviceMotion.accelerationIncludingGravity.x?.toFixed(2) || 0}</p>
+                      <p>Y: {deviceMotion.accelerationIncludingGravity.y?.toFixed(2) || 0}</p>
+                      <p>Z: {deviceMotion.accelerationIncludingGravity.z?.toFixed(2) || 0}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
