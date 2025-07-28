@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import './App.css';
 import axios from 'axios';
+import AIAssistant from './components/AIAssistant';
+import AnimatedParticles from './components/AnimatedParticles';
+import { useDeviceMotion } from './hooks/useDeviceMotion';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
