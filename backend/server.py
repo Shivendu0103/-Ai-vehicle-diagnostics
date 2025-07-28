@@ -292,6 +292,10 @@ async def create_vehicle(vehicle_data: dict):
 async def get_vehicles():
     """Get all vehicles"""
     vehicles = await db.vehicles.find().to_list(100)
+    # Clean up MongoDB ObjectIds
+    for vehicle in vehicles:
+        if '_id' in vehicle:
+            del vehicle['_id']
     return [VehicleInfo(**vehicle) for vehicle in vehicles]
 
 # Include the router in the main app
