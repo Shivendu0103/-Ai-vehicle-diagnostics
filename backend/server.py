@@ -244,6 +244,10 @@ async def get_health_overview():
     
     # Get recent diagnostics
     recent_diagnostics = await db.diagnostic_results.find().sort("created_at", -1).limit(5).to_list(5)
+    # Clean up MongoDB ObjectIds
+    for diagnostic in recent_diagnostics:
+        if '_id' in diagnostic:
+            del diagnostic['_id']
     
     # Generate alerts based on health scores
     alerts = []
