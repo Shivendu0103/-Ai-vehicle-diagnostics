@@ -88,32 +88,32 @@ class EniguityTester:
     def create_realistic_engine_audio(self, format_ext='.wav'):
         """Create realistic engine sound patterns for testing"""
         try:
-            duration = 3.0  # seconds
-            sample_rate = 44100
-            
-            # Create engine-like sound with multiple harmonics
-            t = np.linspace(0, duration, int(sample_rate * duration), False)
-            
-            # Base engine frequency (around 100-200 Hz for idle)
-            base_freq = 150
-            audio_data = np.sin(2 * np.pi * base_freq * t) * 0.5
-            
-            # Add harmonics for realistic engine sound
-            audio_data += np.sin(2 * np.pi * base_freq * 2 * t) * 0.3
-            audio_data += np.sin(2 * np.pi * base_freq * 3 * t) * 0.2
-            
-            # Add engine roughness (irregular firing)
-            roughness = np.sin(2 * np.pi * 25 * t) * 0.1
-            audio_data = audio_data * (1 + roughness)
-            
-            # Add some mechanical noise
-            noise = np.random.normal(0, 0.05, audio_data.shape)
-            audio_data = audio_data + noise
-            
-            # Normalize
-            audio_data = audio_data / np.max(np.abs(audio_data)) * 0.8
-            
             if format_ext == '.wav':
+                duration = 3.0  # seconds
+                sample_rate = 44100
+                
+                # Create engine-like sound with multiple harmonics
+                t = np.linspace(0, duration, int(sample_rate * duration), False)
+                
+                # Base engine frequency (around 100-200 Hz for idle)
+                base_freq = 150
+                audio_data = np.sin(2 * np.pi * base_freq * t) * 0.5
+                
+                # Add harmonics for realistic engine sound
+                audio_data += np.sin(2 * np.pi * base_freq * 2 * t) * 0.3
+                audio_data += np.sin(2 * np.pi * base_freq * 3 * t) * 0.2
+                
+                # Add engine roughness (irregular firing)
+                roughness = np.sin(2 * np.pi * 25 * t) * 0.1
+                audio_data = audio_data * (1 + roughness)
+                
+                # Add some mechanical noise
+                noise = np.random.normal(0, 0.05, audio_data.shape)
+                audio_data = audio_data + noise
+                
+                # Normalize
+                audio_data = audio_data / np.max(np.abs(audio_data)) * 0.8
+                
                 # Create WAV file
                 audio_data_int = (audio_data * 32767).astype(np.int16)
                 temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
@@ -124,7 +124,7 @@ class EniguityTester:
                     wav_file.writeframes(audio_data_int.tobytes())
                 return temp_file.name
             else:
-                # For MP3, create a basic file structure
+                # For MP3 and other formats, use ffmpeg to create proper files
                 return self.create_mp3_test_file()
                 
         except Exception as e:
