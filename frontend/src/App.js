@@ -591,7 +591,7 @@ const HealthDashboard = ({ healthData }) => {
   );
 };
 
-# PWA Install Prompt Component
+// PWA Install Prompt Component
 const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showPrompt, setShowPrompt] = useState(false);
