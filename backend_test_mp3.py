@@ -58,21 +58,29 @@ class EniguityTester:
             return False
 
     def create_mp3_test_file(self):
-        """Create a simple MP3-like test file for testing MP3 upload"""
+        """Create a proper MP3 test file using ffmpeg"""
         try:
-            # Create a minimal MP3 header structure
+            import subprocess
+            
+            # Create a temporary MP3 file using ffmpeg
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-            
-            # Write a minimal MP3 header (ID3v2 + basic MP3 frame)
-            # ID3v2 header
-            temp_file.write(b'ID3\x03\x00\x00\x00\x00\x00\x00')
-            
-            # Add some basic MP3 frame data (simplified)
-            mp3_frame = b'\xff\xfb\x90\x00' + b'\x00' * 100  # Basic MP3 frame header + padding
-            temp_file.write(mp3_frame * 50)  # Repeat to make it longer
-            
             temp_file.close()
-            return temp_file.name
+            
+            # Generate a 3-second sine wave MP3 file using ffmpeg
+            cmd = [
+                'ffmpeg', '-f', 'lavfi', '-i', 'sine=frequency=150:duration=3',
+                '-acodec', 'mp3', '-ar', '44100', temp_file.name, '-y'
+            ]
+            
+            # Run ffmpeg with suppressed output
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                return temp_file.name
+            else:
+                self.log_test("MP3 File Creation", False, f"ffmpeg failed: {result.stderr}")
+                return None
+                
         except Exception as e:
             self.log_test("MP3 File Creation", False, f"Failed to create test MP3: {str(e)}")
             return None
