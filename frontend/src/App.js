@@ -430,7 +430,7 @@ const DiagnosticResults = ({ results, isAnalyzing }) => {
   );
 };
 
-// Health Dashboard Component
+// Enhanced Health Dashboard Component with 3D effects
 const HealthDashboard = ({ healthData }) => {
   if (!healthData) return null;
 
@@ -440,112 +440,154 @@ const HealthDashboard = ({ healthData }) => {
     return '#ff4757';
   };
 
+  const components = [
+    { name: 'Engine', icon: '🔧', health: healthData.health_scores.engine_health },
+    { name: 'Brakes', icon: '🛑', health: healthData.health_scores.brake_health },
+    { name: 'Transmission', icon: '⚙️', health: healthData.health_scores.transmission_health },
+    { name: 'Exhaust', icon: '💨', health: healthData.health_scores.exhaust_health }
+  ];
+
   return (
-    <div className="health-dashboard">
-      <h2>🚗 Vehicle Health Overview</h2>
+    <motion.div 
+      className="health-dashboard"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+    >
+      <motion.h2
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        🚗 AI Vehicle Health Analysis
+      </motion.h2>
       
       <div className="health-grid">
-        <div className="health-card overall">
+        <motion.div 
+          className="health-card overall"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          whileHover={{ scale: 1.05, rotateY: 10 }}
+        >
           <div className="health-score-circle">
-            <div 
+            <motion.div 
               className="circle-progress"
               style={{ 
                 background: `conic-gradient(${getHealthColor(healthData.health_scores.overall_score)} ${healthData.health_scores.overall_score * 3.6}deg, #2a2a2a 0deg)`
               }}
+              initial={{ rotate: 0 }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, delay: 0.6 }}
             >
               <div className="score-text">
-                <span className="score">{healthData.health_scores.overall_score}</span>
-                <span className="label">Overall</span>
+                <motion.span 
+                  className="score"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 1, type: "spring", stiffness: 200 }}
+                >
+                  {healthData.health_scores.overall_score}
+                </motion.span>
+                <span className="label">Overall Health</span>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
+          
+          <motion.div 
+            className="health-status"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+          >
+            <span className={`status-text ${healthData.health_scores.overall_score >= 85 ? 'excellent' : healthData.health_scores.overall_score >= 70 ? 'good' : 'needs-attention'}`}>
+              {healthData.health_scores.overall_score >= 85 ? '✨ Excellent' : 
+               healthData.health_scores.overall_score >= 70 ? '👍 Good' : '⚠️ Needs Attention'}
+            </span>
+          </motion.div>
+        </motion.div>
 
         <div className="component-scores">
-          <div className="component-card">
-            <div className="component-icon">🔧</div>
-            <div className="component-info">
-              <span className="component-name">Engine</span>
-              <div className="score-bar">
-                <div 
-                  className="score-fill"
-                  style={{ 
-                    width: `${healthData.health_scores.engine_health}%`,
-                    backgroundColor: getHealthColor(healthData.health_scores.engine_health)
-                  }}
-                ></div>
+          {components.map((component, index) => (
+            <motion.div 
+              key={component.name}
+              className="component-card"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
+              whileHover={{ 
+                x: 10, 
+                boxShadow: "0 10px 30px rgba(100, 181, 246, 0.2)",
+                backgroundColor: "rgba(255, 255, 255, 0.05)"
+              }}
+            >
+              <motion.div 
+                className="component-icon"
+                whileHover={{ scale: 1.2, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                {component.icon}
+              </motion.div>
+              <div className="component-info">
+                <span className="component-name">{component.name}</span>
+                <div className="score-bar">
+                  <motion.div 
+                    className="score-fill"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${component.health}%` }}
+                    transition={{ delay: 1 + index * 0.1, duration: 1, ease: "easeOut" }}
+                    style={{ backgroundColor: getHealthColor(component.health) }}
+                  />
+                </div>
+                <motion.span 
+                  className="score-value"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.5 + index * 0.1 }}
+                >
+                  {component.health}%
+                </motion.span>
               </div>
-              <span className="score-value">{healthData.health_scores.engine_health}%</span>
-            </div>
-          </div>
-
-          <div className="component-card">
-            <div className="component-icon">🛑</div>
-            <div className="component-info">
-              <span className="component-name">Brakes</span>
-              <div className="score-bar">
-                <div 
-                  className="score-fill"
-                  style={{ 
-                    width: `${healthData.health_scores.brake_health}%`,
-                    backgroundColor: getHealthColor(healthData.health_scores.brake_health)
-                  }}
-                ></div>
-              </div>
-              <span className="score-value">{healthData.health_scores.brake_health}%</span>
-            </div>
-          </div>
-
-          <div className="component-card">
-            <div className="component-icon">⚙️</div>
-            <div className="component-info">
-              <span className="component-name">Transmission</span>
-              <div className="score-bar">
-                <div 
-                  className="score-fill"
-                  style={{ 
-                    width: `${healthData.health_scores.transmission_health}%`,
-                    backgroundColor: getHealthColor(healthData.health_scores.transmission_health)
-                  }}
-                ></div>
-              </div>
-              <span className="score-value">{healthData.health_scores.transmission_health}%</span>
-            </div>
-          </div>
-
-          <div className="component-card">
-            <div className="component-icon">💨</div>
-            <div className="component-info">
-              <span className="component-name">Exhaust</span>
-              <div className="score-bar">
-                <div 
-                  className="score-fill"
-                  style={{ 
-                    width: `${healthData.health_scores.exhaust_health}%`,
-                    backgroundColor: getHealthColor(healthData.health_scores.exhaust_health)
-                  }}
-                ></div>
-              </div>
-              <span className="score-value">{healthData.health_scores.exhaust_health}%</span>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
       </div>
 
       {healthData.alerts && healthData.alerts.length > 0 && (
-        <div className="alert-section">
+        <motion.div 
+          className="alert-section"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.8 }}
+        >
           <h3>⚠️ Active Alerts</h3>
           <div className="alerts-list">
             {healthData.alerts.map((alert, index) => (
-              <div key={index} className={`alert ${alert.type}`}>
+              <motion.div 
+                key={index} 
+                className={`alert ${alert.type}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 2 + index * 0.1 }}
+                whileHover={{ scale: 1.02, x: 5 }}
+              >
                 <span className="alert-message">{alert.message}</span>
-                <span className="alert-severity">{alert.severity}</span>
-              </div>
+                <motion.span 
+                  className="alert-severity"
+                  animate={alert.severity === 'high' ? { 
+                    scale: [1, 1.1, 1],
+                    color: ['#f44336', '#ff6b81', '#f44336']
+                  } : {}}
+                  transition={{ duration: 2, repeat: alert.severity === 'high' ? Infinity : 0 }}
+                >
+                  {alert.severity}
+                </motion.span>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 };
 
