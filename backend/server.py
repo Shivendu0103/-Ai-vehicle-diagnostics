@@ -64,24 +64,62 @@ class HealthScore(BaseModel):
 def extract_audio_features(audio_data, sr):
     """Extract MFCC and other audio features"""
     try:
-        # Extract MFCC features
-        mfcc = librosa.feature.mfcc(y=audio_data, sr=sr, n_mfcc=13)
-        mfcc_mean = np.mean(mfcc, axis=1)
+        # Validate input
+        if len(audio_data) == 0:
+            logging.error("Audio data is empty")
+            return None
+            
+        if sr <= 0:
+            logging.error(f"Invalid sample rate: {sr}")
+            return None
+            
+        # Ensure audio is not too short (minimum 0.1 seconds)
+        min_samples = int(0.1 * sr)
+        if len(audio_data) < min_samples:
+            logging.warning(f"Audio too short ({len(audio_data)} samples), padding")
+            audio_data = np.pad(audio_data, (0, min_samples - len(audio_data)), mode='constant')
         
-        # Extract spectral features
-        spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=audio_data, sr=sr))
-        spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=audio_data, sr=sr))
+        # Extract MFCC features with error handling
+        try:
+            mfcc = librosa.feature.mfcc(y=audio_data, sr=sr, n_mfcc=13)
+            mfcc_mean = np.mean(mfcc, axis=1)
+        except Exception as e:
+            logging.error(f"MFCC extraction failed: {e}")
+            mfcc_mean = np.zeros(13)  # Fallback
         
-        # Zero crossing rate
-        zcr = np.mean(librosa.feature.zero_crossing_rate(audio_data))
+        # Extract spectral features with error handling
+        try:
+            spectral_centroid = np.mean(librosa.feature.spectral_centroid(y=audio_data, sr=sr))
+        except Exception as e:
+            logging.error(f"Spectral centroid extraction failed: {e}")
+            spectral_centroid = 0.0
+            
+        try:
+            spectral_rolloff = np.mean(librosa.feature.spectral_rolloff(y=audio_data, sr=sr))
+        except Exception as e:
+            logging.error(f"Spectral rolloff extraction failed: {e}")
+            spectral_rolloff = 0.0
         
-        return {
+        # Zero crossing rate with error handling
+        try:
+            zcr = np.mean(librosa.feature.zero_crossing_rate(audio_data))
+        except Exception as e:
+            logging.error(f"ZCR extraction failed: {e}")
+            zcr = 0.0
+        
+        features = {
             'mfcc_features': mfcc_mean.tolist(),
-            'spectral_centroid': spectral_centroid,
-            'spectral_rolloff': spectral_rolloff,
-            'zero_crossing_rate': zcr,
-            'duration': len(audio_data) / sr
+            'spectral_centroid': float(spectral_centroid),
+            'spectral_rolloff': float(spectral_rolloff),
+            'zero_crossing_rate': float(zcr),
+            'duration': len(audio_data) / sr,
+            'sample_rate': sr,
+            'samples': len(audio_data)
         }
+        
+        logging.info(f"Successfully extracted features - Duration: {features['duration']:.2f}s, SR: {sr}")
+        return features
+        
     except Exception as e:
         logging.error(f"Feature extraction error: {e}")
         return None
