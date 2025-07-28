@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Build a comprehensive AI-powered vehicle health diagnostics website with sound analysis, mock AI responses, and beautiful dashboard interface"
+user_problem_statement: "Build a comprehensive AI-powered vehicle health diagnostics website with sound analysis, mock AI responses, and beautiful dashboard interface. Updated to change app name from 'VehicleAI Whisperer' to 'Eniguity'."
 
 backend:
   - task: "Audio upload and analysis API"
