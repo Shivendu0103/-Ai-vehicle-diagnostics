@@ -221,23 +221,65 @@ const FileUpload = ({ onFileSelected }) => {
   );
 };
 
-// Diagnostic Results Component
+// Enhanced Diagnostic Results Component
 const DiagnosticResults = ({ results, isAnalyzing }) => {
   if (isAnalyzing) {
     return (
-      <div className="diagnostic-results analyzing">
+      <motion.div 
+        className="diagnostic-results analyzing"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+      >
         <div className="analyzing-animation">
-          <div className="sound-wave">
-            <div className="wave-bar"></div>
-            <div className="wave-bar"></div>
-            <div className="wave-bar"></div>
-            <div className="wave-bar"></div>
-            <div className="wave-bar"></div>
+          <motion.div 
+            className="ai-brain"
+            animate={{ 
+              rotate: 360,
+              scale: [1, 1.2, 1]
+            }}
+            transition={{ 
+              rotate: { duration: 3, repeat: Infinity, ease: "linear" },
+              scale: { duration: 2, repeat: Infinity }
+            }}
+          >
+            🧠
+          </motion.div>
+          <motion.h3
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            AI Analyzing Audio Patterns...
+          </motion.h3>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            Processing MFCC coefficients and spectral features
+          </motion.p>
+          
+          <div className="sound-wave-analysis">
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="analysis-bar"
+                animate={{ 
+                  height: [10, Math.random() * 40 + 20, 10],
+                  backgroundColor: ['#1976d2', '#42a5f5', '#64b5f6', '#1976d2']
+                }}
+                transition={{ 
+                  duration: 0.8,
+                  repeat: Infinity,
+                  delay: i * 0.1,
+                  ease: "easeInOut"
+                }}
+              />
+            ))}
           </div>
-          <h3>AI Analyzing Audio...</h3>
-          <p>Processing sound patterns and extracting features</p>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -255,67 +297,136 @@ const DiagnosticResults = ({ results, isAnalyzing }) => {
 
   const getUrgencyBadge = (urgency) => {
     const badges = {
-      'immediate': { text: 'IMMEDIATE', color: '#ff4757' },
-      'week': { text: 'THIS WEEK', color: '#ff6b81' },
-      'month': { text: 'THIS MONTH', color: '#ffa726' },
-      'monitoring': { text: 'MONITOR', color: '#4caf50' }
+      'immediate': { text: 'IMMEDIATE', color: '#ff4757', icon: '🚨' },
+      'week': { text: 'THIS WEEK', color: '#ff6b81', icon: '⚠️' },
+      'month': { text: 'THIS MONTH', color: '#ffa726', icon: '📅' },
+      'monitoring': { text: 'MONITOR', color: '#4caf50', icon: '👁️' }
     };
     return badges[urgency] || badges['monitoring'];
   };
 
   return (
-    <div className="diagnostic-results">
-      <div className="results-header">
-        <h2>🔍 Diagnostic Results</h2>
+    <motion.div 
+      className="diagnostic-results"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.div 
+        className="results-header"
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <h2>🔍 AI Diagnostic Results</h2>
         <div className="confidence-score">
           <span>Confidence: {(results.confidence_score * 100).toFixed(1)}%</span>
           <div className="confidence-bar">
-            <div 
+            <motion.div 
               className="confidence-fill"
-              style={{ width: `${results.confidence_score * 100}%` }}
-            ></div>
+              initial={{ width: 0 }}
+              animate={{ width: `${results.confidence_score * 100}%` }}
+              transition={{ duration: 1, delay: 0.5 }}
+            />
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="diagnosis-card">
-        <div className="diagnosis-header">
-          <div className="component-badge">{results.component}</div>
-          <div 
+      <motion.div 
+        className="diagnosis-card"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(100, 181, 246, 0.2)" }}
+      >
+        <motion.div 
+          className="diagnosis-header"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          <motion.div 
+            className="component-badge"
+            whileHover={{ scale: 1.05 }}
+          >
+            {results.component}
+          </motion.div>
+          <motion.div 
             className="urgency-badge"
             style={{ backgroundColor: getUrgencyBadge(results.urgency_level).color }}
+            whileHover={{ scale: 1.05 }}
+            animate={{ 
+              boxShadow: results.urgency_level === 'immediate' ? 
+                ['0 0 0 0 rgba(255, 71, 87, 0.7)', '0 0 0 10px rgba(255, 71, 87, 0)'] : 
+                'none'
+            }}
+            transition={{ 
+              boxShadow: { duration: 1, repeat: results.urgency_level === 'immediate' ? Infinity : 0 }
+            }}
           >
-            {getUrgencyBadge(results.urgency_level).text}
-          </div>
-        </div>
+            {getUrgencyBadge(results.urgency_level).icon} {getUrgencyBadge(results.urgency_level).text}
+          </motion.div>
+        </motion.div>
         
-        <h3 className="diagnosis-title">{results.diagnosis}</h3>
+        <motion.h3 
+          className="diagnosis-title"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          {results.diagnosis}
+        </motion.h3>
         
-        <div className="severity-indicator">
-          <div 
+        <motion.div 
+          className="severity-indicator"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 1 }}
+        >
+          <motion.div 
             className="severity-bar"
             style={{ backgroundColor: getSeverityColor(results.severity) }}
+            whileHover={{ scale: 1.02 }}
           >
             Severity: {results.severity.toUpperCase()}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {results.estimated_cost > 0 && (
-          <div className="cost-estimate">
+          <motion.div 
+            className="cost-estimate"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 1.2 }}
+            whileHover={{ scale: 1.02 }}
+          >
             <span>💰 Estimated Cost: ${results.estimated_cost.toFixed(0)}</span>
-          </div>
+          </motion.div>
         )}
 
-        <div className="recommendations">
-          <h4>🔧 Recommendations:</h4>
+        <motion.div 
+          className="recommendations"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.4 }}
+        >
+          <h4>🔧 AI Recommendations:</h4>
           <ul>
             {results.recommendations.map((rec, index) => (
-              <li key={index}>{rec}</li>
+              <motion.li 
+                key={index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.6 + index * 0.1 }}
+                whileHover={{ x: 5, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+              >
+                {rec}
+              </motion.li>
             ))}
           </ul>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 
