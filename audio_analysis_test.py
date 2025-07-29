@@ -16,7 +16,7 @@ import time
 import librosa
 
 # Get backend URL from frontend environment
-BACKEND_URL = "https://5621932a-bb8b-4c46-a8c6-38383abc101f.preview.emergentagent.com/api"
+BACKEND_URL = "http://127.0.0.1:8000"
 
 class AudioAnalysisTester:
     def __init__(self):
